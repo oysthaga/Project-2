@@ -98,7 +98,44 @@ double max_offdiag_symmetric(const arma::mat& A, int& k, int& l)
 // - Modifies the input matrices A and R
 void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
 {
+    N = size(A);
+    arma::mat A_mp1 = arma::mat(N,N);
+    arma::mat R_mp1 = arma::mat(N,N);
 
+    double tau = (A(l,l)-A(k,k))/(2*A(k,l));
+    if (tau>0)
+    {
+        double t = -tau + sqrt( 1+ pow(tau,2) );
+    }
+    else
+    {
+        double t = -tau - sqrt( 1+ pow(tau,2) );
+    }
+    double c = 1/sqrt( 1 + pow(t,2) );
+    double s = c*t;
+
+    A_mp1(k,k) = A(k,k)*pow(c,2) - 2*A(k,l)*c*s + A(l,l)*pow(s,2);
+    A_mp1(l,l) = A(l,l)*pow(c,2) + 2*A(k,l)*c*s + A(k,k)*pow(s,2);
+    A_mp1(k,l) = 0;
+    A_mp1(l,k) = 0; 
+
+    for (int i = 0; i <= size-1; i++)
+    {
+        if (i != k)
+        {
+            if (i != l) 
+            {
+                A_mp1(i,k) = A(i,k)*c - A(i,l)*s;
+                A_mp1(k,i) = A_mp1(i,k); 
+                A_mp1(i,l) = A(i,l)*c + A(i,k)*s; 
+                A_mp1(l,i) = A_mp1(i,l); 
+            }
+        }
+        R_mp1(i,k) = R(i,k)*c - R(i,l)*s;
+        R_mp1(i,l) = R(i,l)*c + R(i,k)*s; 
+    }
+    A = a_mp1;
+    R = R_mp1;
 }
 
 // Jacobi method eigensolver:
@@ -106,51 +143,31 @@ void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
 // - Writes the eigenvalues as entries in the vector "eigenvalues"
 // - Writes the eigenvectors as columns in the matrix "eigenvectors"
 //   (The returned eigenvalues and eigenvectors are sorted using arma::sort_index)
-// - Stops if it the number of iterations reaches "maxiter"
+// - Stops if the number of iterations reaches "maxiter"
 // - Writes the number of iterations to the integer "iterations"
 // - Sets the bool reference "converged" to true if convergence was reached before hitting maxiter
 void jacobi_eigensolver(const arma::mat& A, double eps, arma::vec& eigenvalues, arma::mat& eigenvectors, 
                         const int maxiter, int& iterations, bool& converged)
 {
-    arma::mat I = eye( size(A) );
-    arma::mat a_m = A;
-    double Amax = max_offdiag_symmetric;
-    arma::mat a_mp1;
-    size = size(A)
-    
-    while (std::abs( a_m(k,l) ) > eps )
+    arma::mat A_m = A;
+    R = eye(N,N)
+    while ( Amax > eps )
     {
-        double tau = (a_m(l,l)-a_m(k,k))/(2*a_m(k,l));
-        if (tau>0)
+        // run jacobi_rotate
+        double Amax = max_offdiag_symmetric(A_m);
+        jacobi_rotate(A_m, R, k, l)
+        
+        
+        
+        iterations += 1;
+        if (iterations = maxiter)
         {
-            double t = -tau + sqrt( 1+ pow(tau,2) );
+            // Stop 
         }
-        else
+        if (Amax <= eps)
         {
-            double t = -tau - sqrt( 1+ pow(tau,2) );
+            converged = true;
         }
-        double c = 1/sqrt( 1 + pow(t,2) );
-        double s = c*t
-
-        a_mp1(k,k) = a_m(k,k)*pow(c,2) - 2*a_m(k,l)*c*s + a_m(l,l)*pow(s,2);
-        a_mp1(l,l) = a_m(l,l)*pow(c,2) + 2*a_m(k,l)*c*s + a_m(k,k)*pow(s,2);
-        a_mp1(k,l) = 0;
-        a_mp1(l,k) = 0; 
-
-        for (int i = 0; i <= size-1; i++)
-        {
-            if (i != k)
-            {
-                if (i != l) 
-                {
-                    a_mp1(i,k) = a_m(i,k)*c - a_m(i,l)*s;
-                    a_mp1(k,i) = a_mp1(i,k); 
-                    a_mp1(i,l) = a_m(i,l)*c + a_m(i,k)*s; 
-                    a_mp1(l,i) = a_mp1(i,l); 
-                }
-            }
-        }
-
     }
 
 
