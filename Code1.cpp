@@ -99,27 +99,39 @@ double max_offdiag_symmetric(const arma::mat& A, int& k, int& l)
 void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
 {
     int N = A.n_rows;
-    arma::mat A_mp1 = arma::mat(N,N);
-    arma::mat R_mp1 = arma::mat(N,N);
+    //arma::mat A_mp1 = arma::mat(N,N);
+    //arma::mat R_mp1 = arma::mat(N,N);
+    arma::mat a_m = A;
+    arma::mat r_m = R;
     double t;
+
+    
 
     double tau = (A(l,l)-A(k,k))/(2*A(k,l));
     if (tau>0)
     {
-        t = -tau + sqrt( 1+ pow(tau,2) );
+        //t = -tau + sqrt( 1+ pow(tau,2) );
+        t = 1/(tau+sqrt(1+pow(tau,2)));
     }
     else
     {
-        t = -tau - sqrt( 1+ pow(tau,2) );
+        //t = -tau - sqrt( 1+ pow(tau,2) );
+        t = -1/(-tau+sqrt(1+pow(tau,2)));
     }
     double c = 1/sqrt( 1 + pow(t,2) );
     double s = c*t;
-
+/*
     A_mp1(k,k) = A(k,k)*pow(c,2) - 2*A(k,l)*c*s + A(l,l)*pow(s,2);
     A_mp1(l,l) = A(l,l)*pow(c,2) + 2*A(k,l)*c*s + A(k,k)*pow(s,2);
     A_mp1(k,l) = 0;
     A_mp1(l,k) = 0; 
+*/
 
+    A(k,k) = A(k,k)*pow(c,2) - 2*A(k,l)*c*s + A(l,l)*pow(s,2);
+    A(l,l) = A(l,l)*pow(c,2) + 2*A(k,l)*c*s + A(k,k)*pow(s,2);
+    A(k,l) = 0;
+    A(l,k) = 0; 
+/*
     for (int i = 0; i <= N-1; i++)
     {
         if (i != k)
@@ -135,8 +147,22 @@ void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
         R_mp1(i,k) = R(i,k)*c - R(i,l)*s;
         R_mp1(i,l) = R(i,l)*c + R(i,k)*s; 
     }
-    A = A_mp1;
-    R = R_mp1;
+*/
+    for (int i = 0; i <= N-1; i++)
+    {
+        if (i != k)
+        {
+            if (i != l) 
+            {
+                A(i,k) = a_m(i,k)*c - A(i,l)*s;
+                A(k,i) = a_m(i,k); 
+                A(i,l) = A(i,l)*c + A(i,k)*s; 
+                A(l,i) = A(i,l); 
+            }
+        }
+        R(i,k) = r_m(i,k)*c - R(i,l)*s;
+        R(i,l) = R(i,l)*c + R(i,k)*s; 
+    }
 }
 
 // Jacobi method eigensolver:
@@ -254,11 +280,22 @@ int main()
 
 
     int k, l; 
-/*
     arma::mat A_test = "1., 0., 0., 0.5; 0., 1., -0.7, 0.; 0., -0.7, 1., 0.; 0.5, 0., 0., 1.;";
     double test_max = max_offdiag_symmetric(A_test, k, l);
     std::cout << test_max;
-*/
+    std::cout << "Before\n";
+    std::cout << A_test;
+
+    arma::mat R = arma::eye(4,4);
+
+    jacobi_rotate(A_test, R, k, l);
+    std::cout << "After\n";
+    std::cout << A_test;
+
+    std::cout << "R\n";
+    std::cout << R;
+
+/*
     arma::vec eigenvalues;
     arma::mat eigenvectors;
     int iterations;
@@ -270,6 +307,7 @@ int main()
     std::cout << eigenvalues;
     std::cout << eigenvectors;
     std::cout << converged;
+*/
 
 
     return 0;
