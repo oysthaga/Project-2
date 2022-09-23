@@ -6,7 +6,7 @@
 #include <vector>
 #include <armadillo>
 #include <cassert>
-/*
+
 // Create a tridiagonal matrix tridiag(a,d,e) of size n*n, 
 // from scalar input a, d, and e. That is, create a matrix where
 // - all n-1 elements on the subdiagonal have value a
@@ -42,7 +42,7 @@ arma::mat create_symmetric_tridiagonal(int n, double a, double d)
     // Call create_tridiagonal and return the result
     return create_tridiagonal(n, a, d, a);
 }
-*/
+
 
 // A function that finds the max off-diag element of a symmetric matrix A.
 // - The matrix indices of the max element are returned by writing to the  
@@ -98,18 +98,19 @@ double max_offdiag_symmetric(const arma::mat& A, int& k, int& l)
 // - Modifies the input matrices A and R
 void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
 {
-    N = size(A);
+    int N = A.n_rows;
     arma::mat A_mp1 = arma::mat(N,N);
     arma::mat R_mp1 = arma::mat(N,N);
+    double t;
 
     double tau = (A(l,l)-A(k,k))/(2*A(k,l));
     if (tau>0)
     {
-        double t = -tau + sqrt( 1+ pow(tau,2) );
+        t = -tau + sqrt( 1+ pow(tau,2) );
     }
     else
     {
-        double t = -tau - sqrt( 1+ pow(tau,2) );
+        t = -tau - sqrt( 1+ pow(tau,2) );
     }
     double c = 1/sqrt( 1 + pow(t,2) );
     double s = c*t;
@@ -119,7 +120,7 @@ void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
     A_mp1(k,l) = 0;
     A_mp1(l,k) = 0; 
 
-    for (int i = 0; i <= size-1; i++)
+    for (int i = 0; i <= N-1; i++)
     {
         if (i != k)
         {
@@ -134,7 +135,7 @@ void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
         R_mp1(i,k) = R(i,k)*c - R(i,l)*s;
         R_mp1(i,l) = R(i,l)*c + R(i,k)*s; 
     }
-    A = a_mp1;
+    A = A_mp1;
     R = R_mp1;
 }
 
@@ -150,27 +151,45 @@ void jacobi_eigensolver(const arma::mat& A, double eps, arma::vec& eigenvalues, 
                         const int maxiter, int& iterations, bool& converged)
 {
     arma::mat A_m = A;
-    R = eye(N,N)
+    int N = A.n_rows;
+    arma::mat R = arma::eye(N,N);
+    int k;
+    int l;
+    double Amax;
     while ( Amax > eps )
     {
         // run jacobi_rotate
-        double Amax = max_offdiag_symmetric(A_m);
-        jacobi_rotate(A_m, R, k, l)
-        
+        Amax = max_offdiag_symmetric(A_m, k, l);
+        jacobi_rotate(A_m, R, k, l);
         
         
         iterations += 1;
         if (iterations = maxiter)
         {
-            // Stop 
+            break; 
         }
         if (Amax <= eps)
         {
             converged = true;
         }
     }
+    arma::vec A_m_diag = A_m.diag();
+    //arma::uvec val_indices = arma::sort_index(A_m_diag);
 
+    //arma::mat EigValsSorted = A_m_diag.sort(val_indices);
+    //arma::mat EigValsSorted = sort(A_m_diag, val_indices);
+    //eigenvalues = arma::sort(A_m_diag);
+    //eigenvectors = arma::sort(R);
+    eigenvalues = A_m_diag;
+    eigenvectors = R;
+/*
+    arma::vec diag(N);
 
+    for(int i=0, i<N, i++)
+    {
+        diag(i,i) = A_m(i, i)
+    }
+*/
 }
 
 
@@ -178,7 +197,7 @@ void jacobi_eigensolver(const arma::mat& A, double eps, arma::vec& eigenvalues, 
 
 int main()
 {
-    /*
+    
     int N = 6; 
     int n = N+1;
     double h = 1./n;
@@ -235,9 +254,23 @@ int main()
 
 
     int k, l; 
+/*
     arma::mat A_test = "1., 0., 0., 0.5; 0., 1., -0.7, 0.; 0., -0.7, 1., 0.; 0.5, 0., 0., 1.;";
     double test_max = max_offdiag_symmetric(A_test, k, l);
     std::cout << test_max;
+*/
+    arma::vec eigenvalues;
+    arma::mat eigenvectors;
+    int iterations;
+    bool converged;
+    double epsilon = pow(10, -12);
+    int max_iterations = 100000;
+    jacobi_eigensolver(A, epsilon, eigenvalues, eigenvectors, max_iterations, iterations, converged);
+
+    std::cout << eigenvalues;
+    std::cout << eigenvectors;
+    std::cout << converged;
+
 
     return 0;
 }
