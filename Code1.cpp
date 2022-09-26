@@ -99,69 +99,45 @@ double max_offdiag_symmetric(const arma::mat& A, int& k, int& l)
 void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
 {
     int N = A.n_rows;
-    //arma::mat A_mp1 = arma::mat(N,N);
-    //arma::mat R_mp1 = arma::mat(N,N);
-    arma::mat a_m = A;
-    arma::mat r_m = R;
     double t;
-
+    arma::mat a_m = A; // Copy
+    arma::mat r_m = R; // Copy
     
 
     double tau = (A(l,l)-A(k,k))/(2*A(k,l));
     if (tau>0)
     {
-        //t = -tau + sqrt( 1+ pow(tau,2) );
         t = 1/(tau+sqrt(1+pow(tau,2)));
     }
     else
     {
-        //t = -tau - sqrt( 1+ pow(tau,2) );
         t = -1/(-tau+sqrt(1+pow(tau,2)));
     }
     double c = 1/sqrt( 1 + pow(t,2) );
     double s = c*t;
-/*
-    A_mp1(k,k) = A(k,k)*pow(c,2) - 2*A(k,l)*c*s + A(l,l)*pow(s,2);
-    A_mp1(l,l) = A(l,l)*pow(c,2) + 2*A(k,l)*c*s + A(k,k)*pow(s,2);
-    A_mp1(k,l) = 0;
-    A_mp1(l,k) = 0; 
-*/
 
     A(k,k) = A(k,k)*pow(c,2) - 2*A(k,l)*c*s + A(l,l)*pow(s,2);
     A(l,l) = A(l,l)*pow(c,2) + 2*A(k,l)*c*s + A(k,k)*pow(s,2);
     A(k,l) = 0;
     A(l,k) = 0; 
-/*
+
     for (int i = 0; i <= N-1; i++)
     {
+        //r_m_ik = R(i,k);
+
         if (i != k)
         {
             if (i != l) 
             {
-                A_mp1(i,k) = A(i,k)*c - A(i,l)*s;
-                A_mp1(k,i) = A_mp1(i,k); 
-                A_mp1(i,l) = A(i,l)*c + A(i,k)*s; 
-                A_mp1(l,i) = A_mp1(i,l); 
-            }
-        }
-        R_mp1(i,k) = R(i,k)*c - R(i,l)*s;
-        R_mp1(i,l) = R(i,l)*c + R(i,k)*s; 
-    }
-*/
-    for (int i = 0; i <= N-1; i++)
-    {
-        if (i != k)
-        {
-            if (i != l) 
-            {
-                A(i,k) = a_m(i,k)*c - A(i,l)*s;
-                A(k,i) = a_m(i,k); 
-                A(i,l) = A(i,l)*c + A(i,k)*s; 
+                A(i,k) = a_m(i,k)*c - a_m(i,l)*s;
+                A(k,i) = A(i,k); 
+                A(i,l) = a_m(i,l)*c + a_m(i,k)*s; 
                 A(l,i) = A(i,l); 
             }
         }
         R(i,k) = r_m(i,k)*c - R(i,l)*s;
         R(i,l) = R(i,l)*c + R(i,k)*s; 
+
     }
 }
 
@@ -182,17 +158,19 @@ void jacobi_eigensolver(const arma::mat& A, double eps, arma::vec& eigenvalues, 
     int k;
     int l;
     double Amax;
-    while ( Amax > eps )
+    iterations = 0;
+    while ( Amax > eps ) // Rotate until max of-diagonal value is close to 0.
     {
         // run jacobi_rotate
-        Amax = max_offdiag_symmetric(A_m, k, l);
-        jacobi_rotate(A_m, R, k, l);
+        Amax = max_offdiag_symmetric(A_m, k, l); // Maximum of-diagonal value
+        jacobi_rotate(A_m, R, k, l); // One rotation
         
         
         iterations += 1;
         if (iterations = maxiter)
         {
             break; 
+            std::cout << "\nBroke\n";
         }
         if (Amax <= eps)
         {
@@ -278,12 +256,12 @@ int main()
     }
 */
 
-
+/*
     int k, l; 
     arma::mat A_test = "1., 0., 0., 0.5; 0., 1., -0.7, 0.; 0., -0.7, 1., 0.; 0.5, 0., 0., 1.;";
     double test_max = max_offdiag_symmetric(A_test, k, l);
     std::cout << test_max;
-    std::cout << "Before\n";
+    std::cout << "\nBefore\n";
     std::cout << A_test;
 
     arma::mat R = arma::eye(4,4);
@@ -294,8 +272,8 @@ int main()
 
     std::cout << "R\n";
     std::cout << R;
+*/
 
-/*
     arma::vec eigenvalues;
     arma::mat eigenvectors;
     int iterations;
@@ -304,10 +282,31 @@ int main()
     int max_iterations = 100000;
     jacobi_eigensolver(A, epsilon, eigenvalues, eigenvectors, max_iterations, iterations, converged);
 
+
+    int k, l; 
+
+    std::cout << "\nA\n";
+    std::cout << A;
+    std::cout << "\nMax off-diagonal element\n";
+    std::cout << max_offdiag_symmetric(A,k,l);
+    std::cout << "\nEigenvalues\n";
     std::cout << eigenvalues;
+    std::cout << "\neigenvectors\n";
     std::cout << eigenvectors;
-    std::cout << converged;
-*/
+    if (converged = true)
+    {
+        std::cout << "\nConverged\n";
+    }
+    else
+    {
+        {
+        std::cout << "\nNot converged\n";
+    }
+    }
+    std::cout << "\niterations\n";
+    std::cout << iterations;
+    std::cout <<"\n";
+
 
 
     return 0;
