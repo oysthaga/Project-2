@@ -209,6 +209,8 @@ int main()
     double d = 2./pow(h,2);
     arma::mat A = create_symmetric_tridiagonal(N, a, d);
 
+/*
+
     // Test that the matrix is correct 
     // by saving in textfile. 
     A.save("A.txt", arma::raw_ascii);
@@ -240,7 +242,7 @@ int main()
 
     lam.save("lam.txt", arma::raw_ascii);
     v.save("v.txt", arma::raw_ascii);
-/*
+
     double tol = pow(10, -4);
     for (int i = 0; i <= N-1; i++)
     {
