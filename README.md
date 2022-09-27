@@ -22,4 +22,4 @@ I have run the Python scripts (Code2.py, Code3.py, Code3b.py) in the IDE Spyder 
 
 python3 Code2.py
 
-Code2.py reads the file iterations.txt, which I have created manually by reading the iterations from the terminal. Code3.py assmues a 9X9 matrix, so Code1.cpp must be run first with the input 9. Similarly, Code3b.py must be run after Code1.cpp has been run with input 99.  
+Code2.py reads the file iterations.txt, which I have created manually by reading the iterations from the terminal. Code3.py assumes a 9X9 matrix, so Code1.cpp must be run first with the input 9. Similarly, Code3b.py must be run after Code1.cpp has been run with input 99.  
