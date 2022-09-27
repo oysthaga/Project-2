@@ -1,9 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-f = np.loadtxt('iterations.txt')
-N = f[:,0]
-i = f[:,1]
+f = np.loadtxt('iterations.txt') # Textfile where one column contains the
+                                 # matrix size, and the other the number of
+                                 # iterations. 
+N = f[:,0]      # Matrix size
+i = f[:,1]      # iterations
 s = i/N
 ss = i/N**2
 
