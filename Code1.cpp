@@ -123,8 +123,6 @@ void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
 
     for (int i = 0; i <= N-1; i++)
     {
-        //r_m_ik = R(i,k);
-
         if (i != k)
         {
             if (i != l) 
@@ -135,8 +133,8 @@ void jacobi_rotate(arma::mat& A, arma::mat& R, int k, int l)
                 A(l,i) = A(i,l); 
             }
         }
-        R(i,k) = r_m(i,k)*c - R(i,l)*s;
-        R(i,l) = R(i,l)*c + R(i,k)*s; 
+        R(i,k) = r_m(i,k)*c - r_m(i,l)*s;
+        R(i,l) = r_m(i,l)*c + r_m(i,k)*s; 
 
     }
 }
@@ -157,20 +155,22 @@ void jacobi_eigensolver(const arma::mat& A, double eps, arma::vec& eigenvalues, 
     arma::mat R = arma::eye(N,N);
     int k;
     int l;
-    double Amax;
+    
+    double Amax = max_offdiag_symmetric(A_m, k, l);
     iterations = 0;
     while ( Amax > eps ) // Rotate until max of-diagonal value is close to 0.
     {
         // run jacobi_rotate
-        Amax = max_offdiag_symmetric(A_m, k, l); // Maximum of-diagonal value
+        Amax = max_offdiag_symmetric(A_m, k, l); // Maximum off-diagonal value
         jacobi_rotate(A_m, R, k, l); // One rotation
         
         
         iterations += 1;
-        if (iterations = maxiter)
+        if (iterations == maxiter)
         {
-            break; 
             std::cout << "\nBroke\n";
+            converged = false;
+            break; 
         }
         if (Amax <= eps)
         {
@@ -178,42 +178,37 @@ void jacobi_eigensolver(const arma::mat& A, double eps, arma::vec& eigenvalues, 
         }
     }
     arma::vec A_m_diag = A_m.diag();
-    //arma::uvec val_indices = arma::sort_index(A_m_diag);
+    eigenvalues = arma::normalise(A_m_diag);
+    eigenvectors = arma::normalise(R);
+    arma::uvec indices = arma::sort_index(eigenvalues);
+    eigenvalues = eigenvalues(indices);
+    eigenvectors = eigenvectors.cols(indices);
 
-    //arma::mat EigValsSorted = A_m_diag.sort(val_indices);
-    //arma::mat EigValsSorted = sort(A_m_diag, val_indices);
-    //eigenvalues = arma::sort(A_m_diag);
-    //eigenvectors = arma::sort(R);
-    eigenvalues = A_m_diag;
-    eigenvectors = R;
-/*
-    arma::vec diag(N);
-
-    for(int i=0, i<N, i++)
-    {
-        diag(i,i) = A_m(i, i)
-    }
-*/
 }
 
 
 
 
-int main()
+int main(int argc, char* argv[])
 {
-    
-    int N = 6; 
+  // Check number of command-line arguments
+    if (argc != 2)  // Expect 1 command-line arguments
+    {
+        // Get the name of the executable file
+        std::string executable_name = argv[0];
+        std::cerr << "Error: Wrong number of input arguments." << std::endl;
+        std::cerr << "Usage: " << executable_name << " <some integer> " << std::endl;
+        // Exit program with non-zero return code to indicate a problem
+        return 1;   
+    }
+
+    int N = atoi(argv[1]);    // atoi converts argv[2] to an integer
     int n = N+1;
     double h = 1./n;
     double a = -1./pow(h,2);
     double d = 2./pow(h,2);
     arma::mat A = create_symmetric_tridiagonal(N, a, d);
 
-/*
-
-    // Test that the matrix is correct 
-    // by saving in textfile. 
-    A.save("A.txt", arma::raw_ascii);
 
     // Numeric eigenvalues and eigenvectors.
     arma::vec eigval;
@@ -221,8 +216,6 @@ int main()
     eig_sym(eigval, eigvec, A); 
     eigval = arma::normalise(eigval);
     eigvec = arma::normalise(eigvec);
-    eigval.save("eigval.txt", arma::raw_ascii);
-    eigvec.save("eigvec.txt", arma::raw_ascii);
 
 
     // Analytic eigenvalues and eigenvectors.
@@ -239,63 +232,60 @@ int main()
 
     lam = arma::normalise(lam);
     v = arma::normalise(v);
-
     lam.save("lam.txt", arma::raw_ascii);
     v.save("v.txt", arma::raw_ascii);
 
-    double tol = pow(10, -4);
-    for (int i = 0; i <= N-1; i++)
-    {
-        if abs(lam[i]-eigval[i])>tol
-        {
-            for (int j = 0; j <= N-1; j++)
-            {
-                if abs(v(i,j)-eigvec(i,j))>tol
-                {
-                    ...
-                }
-            }
-    }
-*/
+    // Prints the matrix
+    std::cout << "\nProblem 2\n";
+    std::cout << "\nA\n";
+    std::cout << A;
+    std::cout << "\nAnalytic eigenvalues\n";
+    std::cout << lam;
+    std::cout << "\nNumeric eigenvalues\n";
+    std::cout << eigval;
+    std::cout << "\nAnalytic eigenvectors\n";
+    std::cout << v;
+    std::cout << "\nNumeric eigenvectors\n";
+    std::cout << eigvec;
 
-/*
+
+
     int k, l; 
     arma::mat A_test = "1., 0., 0., 0.5; 0., 1., -0.7, 0.; 0., -0.7, 1., 0.; 0.5, 0., 0., 1.;";
     double test_max = max_offdiag_symmetric(A_test, k, l);
+    std::cout << "\nProblem 3\n";
+    std::cout << "Max off-diagonal-value: ";
     std::cout << test_max;
-    std::cout << "\nBefore\n";
-    std::cout << A_test;
+    std::cout << "\n";
 
-    arma::mat R = arma::eye(4,4);
 
-    jacobi_rotate(A_test, R, k, l);
-    std::cout << "After\n";
-    std::cout << A_test;
-
-    std::cout << "R\n";
-    std::cout << R;
-*/
 
     arma::vec eigenvalues;
     arma::mat eigenvectors;
     int iterations;
     bool converged;
-    double epsilon = pow(10, -12);
+    double epsilon = pow(10, -14);
     int max_iterations = 100000;
     jacobi_eigensolver(A, epsilon, eigenvalues, eigenvectors, max_iterations, iterations, converged);
 
+    eigenvalues.save("eigenvalues.txt", arma::raw_ascii);
+    eigenvectors.save("eigenvectors.txt", arma::raw_ascii);
+    int k1, l1; 
 
-    int k, l; 
-
+    std::cout << "\nProblem 4\n";
     std::cout << "\nA\n";
     std::cout << A;
+    std::cout << "\nAnalytic eigenvalues\n";
+    std::cout << lam;
+    std::cout << "\nAnalytic eigenvectors\n";
+    std::cout << v;
     std::cout << "\nMax off-diagonal element\n";
-    std::cout << max_offdiag_symmetric(A,k,l);
+    std::cout << max_offdiag_symmetric(A,k1,l1);
     std::cout << "\nEigenvalues\n";
     std::cout << eigenvalues;
     std::cout << "\neigenvectors\n";
     std::cout << eigenvectors;
-    if (converged = true)
+    if (converged == true)
     {
         std::cout << "\nConverged\n";
     }
@@ -309,6 +299,65 @@ int main()
     std::cout << iterations;
     std::cout <<"\n";
 
+
+    // Generate random N*N matrix
+    arma::mat A_rand = arma::mat(N, N).randn();  
+
+    // Symmetrize the matrix by reflecting the upper triangle to lower triangle
+    A_rand = arma::symmatu(A_rand);  
+
+    
+
+    // Analytic eigenvalues and eigenvectors.
+    arma::vec lam_rand = arma::vec(N);
+    arma::mat v_rand = arma::mat(N,N);
+    for (int i = 0; i <= N-1; i++)
+    {
+        lam_rand[i] = d + 2*a*cos( ((i+1)*M_PI)/(N+1) );
+        for (int j = 0; j <= N-1; j++)
+        {
+            v_rand(i, j) = sin ( ((i+1)*(j+1)*M_PI) / (N+1) );
+        }
+    }
+
+    lam_rand = arma::normalise(lam_rand);
+    v_rand = arma::normalise(v_rand);
+    lam_rand.save("lam_rand.txt", arma::raw_ascii);
+    v_rand.save("v_rand.txt", arma::raw_ascii);
+    
+
+    jacobi_eigensolver(A_rand, epsilon, eigenvalues, eigenvectors, max_iterations, iterations, converged);
+
+    eigenvalues.save("eigenvalues_rand.txt", arma::raw_ascii);
+    eigenvectors.save("eigenvectors_rand.txt", arma::raw_ascii);
+    int k2, l2; 
+
+    std::cout << "\nProblem 5, dense matrix\n";
+    std::cout << "\nA\n";
+    std::cout << A_rand;
+    std::cout << "\nAnalytic eigenvalues\n";
+    std::cout << lam_rand;
+    std::cout << "\nAnalytic eigenvectors\n";
+    std::cout << v_rand;
+    std::cout << "\nMax off-diagonal element\n";
+    std::cout << max_offdiag_symmetric(A,k2,l2);
+    std::cout << "\nEigenvalues\n";
+    std::cout << eigenvalues;
+    std::cout << "\neigenvectors\n";
+    std::cout << eigenvectors;
+    if (converged == true)
+    {
+        std::cout << "\nConverged\n";
+    }
+    else
+    {
+        {
+        std::cout << "\nNot converged\n";
+    }
+    }
+    std::cout << "\niterations\n";
+    std::cout << iterations;
+    std::cout <<"\n";
 
 
     return 0;
